@@ -37,7 +37,6 @@ export default function SignInForm({ isOpen, onClose }: SignInFormProps) {
         className="relative w-full max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close */}
         <button
           type="button"
           onClick={onClose}

@@ -10,7 +10,7 @@ export async function proxy(request: NextRequest) {
 
   if (!token) {
     return NextResponse.redirect(
-      new URL("/signin", request.url)
+      new URL("/", request.url)
     );
   }
 
@@ -20,7 +20,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   } catch {
     return NextResponse.redirect(
-      new URL("/signin", request.url)
+      new URL("/", request.url)
     );
   }
 }
