@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1788347487256,
+      "tag": "0000_blushing_sabra",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1788494474681,
+      "tag": "0001_sweet_gargoyle",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1788594173479,
+      "tag": "0002_sour_ma_gnuci",
+      "breakpoints": true
+    }
+  ]
+}
