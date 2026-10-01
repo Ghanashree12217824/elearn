@@ -33,9 +33,27 @@ export const signInSchema = z.object({
 export const courseSchema = z.object({
   title: z
     .string()
-    .min(2, "Title must be at least 2 characters"),
+    .min(2, "Title must be at least 2 characters")
+    .max(45, "Title cannot exceed 45 characters"),
 
   description: z
     .string()
-    .min(5, "Description must be at least 5 characters"),
+    .min(5, "Description must be at least 5 characters")
+    .max(45, "Description cannot exceed 45 characters"),
+
+  categoryId: z
+    .number()
+    .int()
+    .positive("Please select a category"),
+
+  price: z
+    .number()
+    .int()
+    .min(0, "Price cannot be negative"),
+
+  level: z.enum([
+    "beginner",
+    "intermediate",
+    "advanced",
+  ]),
 });

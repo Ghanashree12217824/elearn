@@ -7,8 +7,12 @@ import {
   datetime,
   json,
   mysqlEnum,
+  timestamp,
+  tinyint,
+  index,
 } from "drizzle-orm/mysql-core";
-import { relations } from "drizzle-orm";
+
+import { relations, and, or, eq, desc } from "drizzle-orm";
 
 /* =========================================================
    USERS
@@ -23,18 +27,17 @@ export const users = mysqlTable("users", {
 
   gmail: varchar("gmail", { length: 45 }),
 
-  passwordHash: varchar("password_hash", { length: 45 }),
+  passwordHash: varchar("password_hash", { length: 255 }),
 
   username: varchar("username", { length: 45 }),
 
-  // Replace these values with the exact ENUM values
-  // from your existing database.
   role: mysqlEnum("role", [
-    
     "student",
     "instructor",
     "admin",
   ]),
+
+  createdAt: datetime("created_at").notNull(),
 });
 
 
@@ -49,11 +52,11 @@ export const instructorProfile = mysqlTable("instructor_profile", {
 
   specialization: varchar("specialization", { length: 45 }),
 
-  joinedAt: datetime("joined_at"),
+  joinedAt: datetime("joined_at").notNull(),
 
   experiencedYears: int("experienced_years"),
 
-  bio: varchar("bio", { length: 45 }),
+  bio: text("bio"),
 });
 
 
@@ -64,13 +67,13 @@ export const instructorProfile = mysqlTable("instructor_profile", {
 export const studentProfile = mysqlTable("student_profile", {
   userId: int("user_id").primaryKey(),
 
-  bio: varchar("bio", { length: 45 }),
+  bio: text("bio"),
 
   education: varchar("education", { length: 45 }),
 
   dob: date("dob"),
 
-  joinedAt: datetime("joined_at"),
+  joinedAt: datetime("joined_at").notNull(),
 });
 
 
@@ -86,6 +89,17 @@ export const categories = mysqlTable("categories", {
 
 
 /* =========================================================
+   TAGS
+========================================================= */
+
+export const tags = mysqlTable("tags", {
+  id: int("id").autoincrement().primaryKey(),
+
+  name: varchar("name", { length: 45 }),
+});
+
+
+/* =========================================================
    COURSES
 ========================================================= */
 
@@ -94,35 +108,209 @@ export const courses = mysqlTable("courses", {
 
   title: varchar("title", { length: 45 }),
 
-  description: varchar("description", { length: 45 }),
+  description: text("description"),
 
-  slug: varchar("slug", { length: 45 }),
+  /*
+    Example:
+
+    {
+      "url": "https://testing.com/course-thumbnail.jpg",
+      "name": "course-thumbnail.jpg",
+      "size": 125430,
+      "mimeType": "image/jpeg"
+    }
+  */
+  thumbnail: json("thumbnail"),
 
   instructorId: int("instructor_id"),
 
   categoryId: int("category_id"),
 
-  createdAt: datetime("created_at"),
+  price: int("price"),
 
-  updatedAt: varchar("updated_at", { length: 45 }),
-
-  // Replace with the exact ENUM values
   level: mysqlEnum("level", [
     "beginner",
     "intermediate",
     "advanced",
   ]),
 
-  // Replace with the exact ENUM values
   status: mysqlEnum("status", [
     "draft",
     "published",
-  ]),
+  ]).default("draft"),
 
-  price: int("price"),
+  createdAt: datetime("created_at").notNull(),
 
-  publishedAt: date("published_at"),
+  updatedAt: datetime("updated_at"),
+
+  publishedAt: datetime("published_at"),
 });
+
+
+/* =========================================================
+   COURSE TAGS
+========================================================= */
+
+export const courseTags = mysqlTable("course_tags", {
+  courseId: int("course_id").notNull(),
+
+  tagId: int("tag_id").notNull(),
+});
+
+
+/* =========================================================
+   MODULES
+========================================================= */
+
+export const modules = mysqlTable("modules", {
+  id: int("id").autoincrement().primaryKey(),
+
+  courseId: int("course_id").notNull(),
+
+  title: varchar("title", { length: 45 }),
+
+  description: text("description"),
+
+  position: int("position"),
+
+  createdAt: datetime("created_at").notNull(),
+
+  updatedAt: datetime("updated_at"),
+});
+
+
+/* =========================================================
+   LESSONS
+========================================================= */
+
+export const lessons = mysqlTable("lessons", {
+  id: int("id").autoincrement().primaryKey(),
+
+  moduleId: int("module_id").notNull(),
+
+  title: varchar("title", { length: 45 }),
+
+  description: text("description"),
+
+  /*
+    Example:
+
+    {
+      "contentId": "uuid",
+      "type": "text",
+      "body": "rich text <p>Hello</p>"
+    }
+  */
+  content: json("content"),
+
+  position: int("position"),
+
+  createdAt: datetime("created_at").notNull(),
+
+  updatedAt: datetime("updated_at"),
+});
+
+
+/* =========================================================
+   LESSON RESOURCES
+========================================================= */
+
+export const lessonResources = mysqlTable("lesson_resources", {
+  id: int("id").autoincrement().primaryKey(),
+
+  lessonId: int("lesson_id").notNull(),
+
+  title: varchar("title", { length: 45 }),
+
+  /*
+    Example:
+
+    {
+      "url": "https://testing.com/course-thumbnail.jpg",
+      "fileSize": 119112,
+      "mimeType": "image/jpeg",
+      "fileName": "image.jpg"
+    }
+  */
+  metadata: json("metadata"),
+
+  position: int("position"),
+
+  createdAt: datetime("created_at").notNull(),
+
+  updatedAt: datetime("updated_at"),
+});
+
+
+/* =========================================================
+   COURSE BUILDER DRAFT
+========================================================= */
+
+export const courseBuilderDraft = mysqlTable(
+  "course_builder_draft",
+  {
+    id: int("id").autoincrement().primaryKey(),
+
+    uuid: varchar("uuid", { length: 36 }).notNull().unique(),
+
+    instructorId: int("instructor_id").notNull(),
+
+    sessionId: varchar("session_id", { length: 36 }),
+
+    status: mysqlEnum("status", [
+      "active",
+      "completed",
+      "published",
+      "abandoned",
+      "expired",
+    ]).notNull().default("active"),
+
+    currentStep: tinyint("current_step", { unsigned: true }).notNull().default(1),
+
+    completionPct: tinyint("completion_pct", { unsigned: true }).notNull().default(0),
+
+    /*
+      Entire Course Builder JSON
+
+      {
+        "course": {...},
+        "modules": [
+          {
+            "lessons": [...]
+          }
+        ]
+      }
+    */
+    draftData: json("draft_data").notNull(),
+
+    version: int("version", { unsigned: true }).notNull().default(1),
+
+    parentDraftId: int("parent_draft_id", { unsigned: true }),
+
+    /*
+      When non-null, this draft represents pending changes
+      for an already-published course. The live course content
+      is NOT overwritten until the instructor explicitly
+      publishes the draft.
+    */
+    sourceCourseId: int("source_course_id"),
+
+    clientInfo: json("client_info"),
+
+    tags: json("tags"),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull().onUpdateNow(),
+    expiresAt: timestamp("expires_at"),
+    lastActivityAt: timestamp("last_activity_at"),
+  },
+  (table) => ({
+    instructorStatusIdx: index("idx_draft_instructor_status").on(table.instructorId, table.status, table.updatedAt),
+    sessionIdx: index("idx_draft_session").on(table.sessionId),
+    expiresIdx: index("idx_draft_expires").on(table.expiresAt),
+    parentIdx: index("idx_draft_parent").on(table.parentDraftId),
+  }),
+);
 
 
 /* =========================================================
@@ -136,61 +324,13 @@ export const enrollment = mysqlTable("enrollment", {
 
   id: varchar("id", { length: 45 }),
 
-  enrolledAt: date("enrolled_at"),
+  enrolledAt: date("enrolled_at").notNull(),
 
-  // Replace with the exact ENUM values
   status: mysqlEnum("status", [
     "active",
     "completed",
     "cancelled",
   ]),
-});
-
-
-/* =========================================================
-   MODULES
-========================================================= */
-
-export const modules = mysqlTable("modules", {
-  id: int("id").autoincrement().primaryKey(),
-
-  title: varchar("title", { length: 45 }),
-
-  description: varchar("description", { length: 45 }),
-
-  courseId: int("course_id"),
-});
-
-
-/* =========================================================
-   LESSON
-========================================================= */
-
-export const lesson = mysqlTable("lesson", {
-  id: int("id").autoincrement().primaryKey(),
-
-  title: varchar("title", { length: 45 }),
-
-  moduleId: int("module_id"),
-});
-
-
-/* =========================================================
-   CONTENTS
-========================================================= */
-
-export const contents = mysqlTable("contents", {
-  id: int("id").autoincrement().primaryKey(),
-
-  lessonId: int("lesson_id"),
-
-  type: varchar("type", { length: 45 }),
-
-  title: varchar("title", { length: 45 }),
-
-  body: varchar("body", { length: 45 }),
-
-  position: int("position"),
 });
 
 
@@ -205,9 +345,9 @@ export const quiz = mysqlTable("quiz", {
 
   moduleId: int("module_id"),
 
-  totalMarks: varchar("total_marks", { length: 45 }),
+  totalMarks: int("total_marks"),
 
-  totalMinutes: varchar("total_minutes", { length: 45 }),
+  totalMinutes: int("total_minutes"),
 });
 
 
@@ -218,17 +358,17 @@ export const quiz = mysqlTable("quiz", {
 export const questions = mysqlTable("questions", {
   id: int("id").autoincrement().primaryKey(),
 
-  questionText: varchar("question_text", { length: 45 }),
+  questionText: text("question_text"),
 
   quizId: int("quiz_id"),
 
-  marks: varchar("marks", { length: 45 }),
+  marks: int("marks"),
 
-  position: varchar("position", { length: 45 }),
+  position: int("position"),
 
-  createdAt: varchar("created_at", { length: 45 }),
+  createdAt: datetime("created_at").notNull(),
 
-  updatedAt: varchar("updated_at", { length: 45 }),
+  updatedAt: datetime("updated_at"),
 
   optionText: json("option_text"),
 });
@@ -253,21 +393,28 @@ export const submission = mysqlTable("submission", {
    RELATIONS
 ========================================================= */
 
-export const usersRelations = relations(users, ({ one, many }) => ({
-  instructorProfile: one(instructorProfile, {
-    fields: [users.id],
-    references: [instructorProfile.userId],
+export const usersRelations = relations(
+  users,
+  ({ one, many }) => ({
+    instructorProfile: one(instructorProfile, {
+      fields: [users.id],
+      references: [instructorProfile.userId],
+    }),
+
+    studentProfile: one(studentProfile, {
+      fields: [users.id],
+      references: [studentProfile.userId],
+    }),
+
+    courses: many(courses),
+
+    enrollments: many(enrollment),
+
+    submissions: many(submission),
+
+    courseBuilderDrafts: many(courseBuilderDraft),
   }),
-
-  studentProfile: one(studentProfile, {
-    fields: [users.id],
-    references: [studentProfile.userId],
-  }),
-
-  enrollments: many(enrollment),
-
-  submissions: many(submission),
-}));
+);
 
 
 export const instructorProfileRelations = relations(
@@ -277,7 +424,7 @@ export const instructorProfileRelations = relations(
       fields: [instructorProfile.userId],
       references: [users.id],
     }),
-  })
+  }),
 );
 
 
@@ -288,7 +435,7 @@ export const studentProfileRelations = relations(
       fields: [studentProfile.userId],
       references: [users.id],
     }),
-  })
+  }),
 );
 
 
@@ -296,7 +443,31 @@ export const categoriesRelations = relations(
   categories,
   ({ many }) => ({
     courses: many(courses),
-  })
+  }),
+);
+
+
+export const tagsRelations = relations(
+  tags,
+  ({ many }) => ({
+    courseTags: many(courseTags),
+  }),
+);
+
+
+export const courseTagsRelations = relations(
+  courseTags,
+  ({ one }) => ({
+    course: one(courses, {
+      fields: [courseTags.courseId],
+      references: [courses.id],
+    }),
+
+    tag: one(tags, {
+      fields: [courseTags.tagId],
+      references: [tags.id],
+    }),
+  }),
 );
 
 
@@ -315,9 +486,64 @@ export const coursesRelations = relations(
 
     modules: many(modules),
 
+    courseTags: many(courseTags),
+
     enrollments: many(enrollment),
-  })
+  }),
 );
+
+
+export const modulesRelations = relations(
+  modules,
+  ({ one, many }) => ({
+    course: one(courses, {
+      fields: [modules.courseId],
+      references: [courses.id],
+    }),
+
+    lessons: many(lessons),
+
+    quizzes: many(quiz),
+  }),
+);
+
+
+export const lessonsRelations = relations(
+  lessons,
+  ({ one, many }) => ({
+    module: one(modules, {
+      fields: [lessons.moduleId],
+      references: [modules.id],
+    }),
+
+    resources: many(lessonResources),
+  }),
+);
+
+
+export const lessonResourcesRelations = relations(
+  lessonResources,
+  ({ one }) => ({
+    lesson: one(lessons, {
+      fields: [lessonResources.lessonId],
+      references: [lessons.id],
+    }),
+  }),
+);
+
+
+export const courseBuilderDraftRelations =
+  relations(
+    courseBuilderDraft,
+    ({ one }) => ({
+      instructor: one(users, {
+        fields: [
+          courseBuilderDraft.instructorId,
+        ],
+        references: [users.id],
+      }),
+    })
+  )
 
 
 export const enrollmentRelations = relations(
@@ -332,46 +558,7 @@ export const enrollmentRelations = relations(
       fields: [enrollment.userId],
       references: [users.id],
     }),
-  })
-);
-
-
-export const modulesRelations = relations(
-  modules,
-  ({ one, many }) => ({
-    course: one(courses, {
-      fields: [modules.courseId],
-      references: [courses.id],
-    }),
-
-    lessons: many(lesson),
-
-    quizzes: many(quiz),
-  })
-);
-
-
-export const lessonRelations = relations(
-  lesson,
-  ({ one, many }) => ({
-    module: one(modules, {
-      fields: [lesson.moduleId],
-      references: [modules.id],
-    }),
-
-    contents: many(contents),
-  })
-);
-
-
-export const contentsRelations = relations(
-  contents,
-  ({ one }) => ({
-    lesson: one(lesson, {
-      fields: [contents.lessonId],
-      references: [lesson.id],
-    }),
-  })
+  }),
 );
 
 
@@ -386,7 +573,7 @@ export const quizRelations = relations(
     questions: many(questions),
 
     submissions: many(submission),
-  })
+  }),
 );
 
 
@@ -399,7 +586,7 @@ export const questionsRelations = relations(
     }),
 
     submissions: many(submission),
-  })
+  }),
 );
 
 
@@ -420,5 +607,5 @@ export const submissionRelations = relations(
       fields: [submission.userId],
       references: [users.id],
     }),
-  })
+  }),
 );

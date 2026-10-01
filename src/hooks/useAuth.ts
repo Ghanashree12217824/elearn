@@ -18,24 +18,41 @@ export function useAuth() {
   const [authLoading, setAuthLoading] = useState(true);
   const [error, setError] = useState("");
 
-  async function getUser() {
-    try {
-      const response = await fetch("/api/auth/me");
+  useEffect(() => {
+    let active = true;
 
-      if (!response.ok) {
-        setUser(null);
-        return;
-      }
+    fetch("/api/auth/me")
+      .then(async (response) => {
+        if (!response.ok) {
+          if (active) {
+            setUser(null);
+          }
+          return null;
+        }
 
-      const data = await response.json();
+        const data = (await response.json()) as { user: User };
+        return data;
+      })
+      .then((data) => {
+        if (active && data) {
+          setUser(data.user);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setUser(null);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setAuthLoading(false);
+        }
+      });
 
-      setUser(data.user);
-    } catch {
-      setUser(null);
-    } finally {
-      setAuthLoading(false);
-    }
-  }
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function signIn(email: string, password: string) {
     setLoading(true);
@@ -61,17 +78,19 @@ export function useAuth() {
       }
 
       if (data.user.role === "student") {
+        setUser(data.user);
         router.push("/courses");
       } else if (data.user.role === "instructor") {
-        router.push("/courses");
+        setUser(data.user);
+        router.push("/instructor");
       } else if (data.user.role === "admin") {
+        setUser(data.user);
         router.push("/admin");
       }
 
       return true;
     } catch {
       setError("Something went wrong. Please try again.");
-
       return false;
     } finally {
       setLoading(false);
@@ -108,12 +127,24 @@ export function useAuth() {
         return false;
       }
 
-      router.push("/courses");
+      // Auto-login after sign-up: the API sets
+      // a JWT cookie and returns the user role.
+      if (data.user.role === "student") {
+        setUser(data.user);
+        router.push("/courses");
+      } else if (
+        data.user.role === "instructor"
+      ) {
+        setUser(data.user);
+        router.push("/instructor");
+      } else if (data.user.role === "admin") {
+        setUser(data.user);
+        router.push("/admin");
+      }
 
       return true;
     } catch {
       setError("Something went wrong. Please try again.");
-
       return false;
     } finally {
       setLoading(false);
@@ -126,13 +157,8 @@ export function useAuth() {
     });
 
     setUser(null);
-
     router.push("/");
   }
-
-  useEffect(() => {
-    getUser();
-  }, []);
 
   return {
     user,

@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 
 const courses = [
@@ -40,19 +38,11 @@ const courses = [
 ];
 
 export default function CoursesPage() {
-  const router = useRouter();
-
   const {
     user,
     authLoading,
     logout,
   } = useAuth();
-
-  // useEffect(() => {
-  //   if (!authLoading && !user) {
-  //     router.replace("/signin");
-  //   }
-  // }, [user, authLoading, router]);
 
   if (authLoading) {
     return (
@@ -250,3 +240,15 @@ export default function CoursesPage() {
     </main>
   );
 }
+
+
+// import CourseForm from "@/components/CourseForm";
+
+
+// export default function CoursesPage() {
+//   return (
+//     <main className="p-10">
+//       <CourseForm />
+//     </main>
+//   );
+// }

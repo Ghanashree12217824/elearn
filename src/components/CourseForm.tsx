@@ -19,11 +19,11 @@ export default function CourseForm() {
   ) {
     e.preventDefault();
 
-    const success =
-      await createCourse(
-        title,
-        description
-      );
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+
+    const success = await createCourse(formData);
 
     if (success) {
       setTitle("");

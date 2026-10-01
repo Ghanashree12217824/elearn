@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+  import { useState } from "react";
+  import { useRouter } from "next/navigation";
+  import { useAuth } from "@/hooks/useAuth";
 
 type SignInFormProps = {
   isOpen: boolean;
@@ -9,6 +10,8 @@ type SignInFormProps = {
 };
 
 export default function SignInForm({ isOpen, onClose }: SignInFormProps) {
+  const router = useRouter();
+
   const { signIn, loading, error } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -178,16 +181,20 @@ export default function SignInForm({ isOpen, onClose }: SignInFormProps) {
                 </button>
               </div>
 
-              {/* SIGN UP */}
-              <p className="mt-7 text-center text-sm text-slate-500">
-                Don't have an account?{" "}
-                <button
-                  type="button"
-                  className="font-semibold text-indigo-600 hover:text-indigo-700"
-                >
-                  Sign up
-                </button>
-              </p>
+               {/* SIGN UP */}
+               <p className="mt-7 text-center text-sm text-slate-500">
+                 Don&apos;t have an account?{" "}
+                 <button
+                   type="button"
+                   onClick={() => {
+                     onClose();
+                     router.push("/signup");
+                   }}
+                   className="font-semibold text-indigo-600 hover:text-indigo-700"
+                 >
+                   Sign up
+                 </button>
+               </p>
             </form>
           </div>
         </div>

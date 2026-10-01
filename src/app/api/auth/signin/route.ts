@@ -50,44 +50,32 @@ export async function POST(request: Request) {
     const user = userResult[0];
 
     if (!user.passwordHash) {
-  return NextResponse.json(
-    {
-      message: "This account does not have a password set.",
-    },
-    {
-      status: 401,
+      return NextResponse.json(
+        {
+          message: "This account does not have a password set.",
+        },
+        {
+          status: 401,
+        }
+      );
     }
-  );
-}
-
-if (!user.passwordHash) {
-  return NextResponse.json(
-    {
-      message: "Password is not set for this account",
-    },
-    {
-      status: 401,
-    }
-  );
-}
 
     const passwordMatches =
       await bcrypt.compare(
         password,
         user.passwordHash
       );
-    if (!passwordMatches) {
-  return NextResponse.json(
-    {
-      message: "Invalid email or password",
-    },
-    {
-      status: 401,
-    }
-  );
-}
 
-   
+    if (!passwordMatches) {
+      return NextResponse.json(
+        {
+          message: "Invalid email or password",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
 
     const token = await createToken(user.id);
 
