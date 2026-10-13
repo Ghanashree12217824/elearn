@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function SignUpForm() {
@@ -9,7 +11,23 @@ export default function SignUpForm() {
     signUp,
     loading,
     error,
+    user,
+    authLoading,
   } = useAuth();
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      if (user.role === "student") {
+        router.push("/courses");
+      } else if (user.role === "instructor") {
+        router.push("/instructor");
+      } else if (user.role === "admin") {
+        router.push("/admin");
+      }
+    }
+  }, [authLoading, user, router]);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

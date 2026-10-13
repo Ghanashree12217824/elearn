@@ -335,7 +335,48 @@ export const enrollment = mysqlTable("enrollment", {
 
 
 /* =========================================================
-   QUIZ
+    BOOKMARKS
+   ============================================================== */
+
+export const bookmarks = mysqlTable("bookmarks", {
+  id: int("id").autoincrement().primaryKey(),
+
+  userId: int("user_id").notNull(),
+
+  courseId: int("course_id"),
+
+  lessonId: int("lesson_id"),
+
+  createdAt: datetime("created_at").notNull(),
+
+  updatedAt: datetime("updated_at"),
+});
+
+
+/* =========================================================
+    STUDENT PROGRESS
+   ============================================================== */
+
+export const studentProgress = mysqlTable("student_progress", {
+  id: int("id").autoincrement().primaryKey(),
+
+  userId: int("user_id").notNull(),
+
+  courseId: int("course_id").notNull(),
+
+  lessonId: int("lesson_id").notNull(),
+
+  completed: tinyint("completed", { unsigned: true }).notNull().default(0),
+
+  completedAt: datetime("completed_at"),
+
+  createdAt: datetime("created_at").notNull(),
+
+  updatedAt: datetime("updated_at"),
+});
+
+
+/* =========================================================
 ========================================================= */
 
 export const quiz = mysqlTable("quiz", {
@@ -413,6 +454,10 @@ export const usersRelations = relations(
     submissions: many(submission),
 
     courseBuilderDrafts: many(courseBuilderDraft),
+
+    bookmarks: many(bookmarks),
+
+    studentProgress: many(studentProgress),
   }),
 );
 
@@ -489,6 +534,10 @@ export const coursesRelations = relations(
     courseTags: many(courseTags),
 
     enrollments: many(enrollment),
+
+    bookmarks: many(bookmarks),
+
+    studentProgress: many(studentProgress),
   }),
 );
 
@@ -606,6 +655,48 @@ export const submissionRelations = relations(
     user: one(users, {
       fields: [submission.userId],
       references: [users.id],
+    }),
+  }),
+);
+
+
+export const bookmarksRelations = relations(
+  bookmarks,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [bookmarks.userId],
+      references: [users.id],
+    }),
+
+    course: one(courses, {
+      fields: [bookmarks.courseId],
+      references: [courses.id],
+    }),
+
+    lesson: one(lessons, {
+      fields: [bookmarks.lessonId],
+      references: [lessons.id],
+    }),
+  }),
+);
+
+
+export const studentProgressRelations = relations(
+  studentProgress,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [studentProgress.userId],
+      references: [users.id],
+    }),
+
+    course: one(courses, {
+      fields: [studentProgress.courseId],
+      references: [courses.id],
+    }),
+
+    lesson: one(lessons, {
+      fields: [studentProgress.lessonId],
+      references: [lessons.id],
     }),
   }),
 );

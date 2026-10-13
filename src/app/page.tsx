@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 import SignInForm from "@/components/SignInForm";
 import CourseCard from "@/components/CourseCard";
@@ -52,26 +53,6 @@ export default function SignInPage() {
     <main className="min-h-screen bg-slate-50">
 
       {/* -------------------------------- */}
-      {/* Navbar */}
-      {/* -------------------------------- */}
-
-      <nav className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
-
-        <h1 className="text-xl font-bold text-slate-900">
-          LearnHub
-        </h1>
-
-        <button
-          type="button"
-          onClick={() => setIsSignInOpen(true)}
-          className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:cursor-pointer hover:bg-indigo-700"
-        >
-          Sign In
-        </button>
-
-      </nav>
-
-      {/* -------------------------------- */}
       {/* Hero */}
       {/* -------------------------------- */}
 
@@ -105,28 +86,28 @@ export default function SignInPage() {
 
         {/* Section Header */}
 
-        <div className="mb-8 flex items-end justify-between">
+          <div className="mb-8 flex items-end justify-between">
 
-          <div>
+            <div>
 
-            <p className="text-sm font-semibold text-indigo-600">
-              EXPLORE
-            </p>
+              <p className="text-sm font-semibold text-indigo-600">
+                EXPLORE
+              </p>
 
-            <h3 className="mt-1 text-2xl font-bold text-slate-900">
-              Popular Courses
-            </h3>
+              <h3 className="mt-1 text-2xl font-bold text-slate-900">
+                Popular Courses
+              </h3>
+
+            </div>
+
+            <Link
+              href="/courses"
+              className="text-sm font-semibold text-indigo-600 transition hover:text-indigo-700"
+            >
+              View all →
+            </Link>
 
           </div>
-
-          <button
-            type="button"
-            className="text-sm font-semibold text-indigo-600 transition hover:text-indigo-700"
-          >
-            View all →
-          </button>
-
-        </div>
 
         {/* -------------------------------- */}
         {/* Loading */}

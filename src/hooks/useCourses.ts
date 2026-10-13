@@ -33,6 +33,7 @@ type Course = {
   version?: number;
   lastActivityAt?: string;
   sourceCourseId?: number | null;
+  enrollmentCount?: number;
 };
 
 export function useCourses() {

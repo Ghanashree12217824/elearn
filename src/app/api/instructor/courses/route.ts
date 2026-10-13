@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { eq, and, or } from "drizzle-orm";
+import { eq, and, or, countDistinct } from "drizzle-orm";
 
 import { db } from "@/db";
-import { courses, courseBuilderDraft } from "@/db/schema";
+import { courses, courseBuilderDraft, enrollment } from "@/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 
 
@@ -31,7 +31,7 @@ export async function GET() {
       );
     }
 
-    // 4. Get courses created by the logged-in instructor
+    // 4. Get courses created by the logged-in instructor with enrollment counts
     const instructorCourses = await db
       .select({
         id: courses.id,
@@ -44,9 +44,12 @@ export async function GET() {
         createdAt: courses.createdAt,
         updatedAt: courses.updatedAt,
         publishedAt: courses.publishedAt,
+        enrollmentCount: countDistinct(enrollment.userId),
       })
       .from(courses)
-      .where(eq(courses.instructorId, user.id));
+      .leftJoin(enrollment, eq(enrollment.courseId, courses.id))
+      .where(eq(courses.instructorId, user.id))
+      .groupBy(courses.id);
 
     // 5. Get draft courses from course_builder_draft table (only active/completed)
     const draftCourses = await db
@@ -103,6 +106,7 @@ export async function GET() {
         expiresAt: draft.expiresAt,
         lastActivityAt: draft.lastActivityAt,
         sourceCourseId: draft.sourceCourseId,
+        enrollmentCount: 0,
       };
     });
 

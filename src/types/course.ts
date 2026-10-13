@@ -14,12 +14,16 @@ export interface CourseResource {
   createdAt: string;
   status: string;
   publishedAt: string | null;
+  description: string;
+  level: string;
 
   tags: TagResource[];
 
   instructor: InstructorResource;
 
   modules: ModuleResource[];
+
+  enrollmentCount?: number;
 }
 
 export interface TagResource {

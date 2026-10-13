@@ -6,6 +6,7 @@ import {
   asc,
   desc,
   eq,
+  countDistinct,
 } from "drizzle-orm";
 
 import { db } from "@/db";
@@ -17,6 +18,7 @@ import {
   modules,
   lessons as lesson,
   categories,
+  enrollment,
 } from "@/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { courseSchema } from "@/lib/validation";
@@ -80,13 +82,16 @@ export async function GET(request: Request) {
         instructorFirstName: users.firstName,
         instructorLastName: users.lastName,
         instructorEmail: users.gmail,
+        enrollmentCount: countDistinct(enrollment.userId),
       })
       .from(courses)
       .leftJoin(
         users,
         eq(courses.instructorId, users.id),
       )
+      .leftJoin(enrollment, eq(enrollment.courseId, courses.id))
       .where(courseCondition)
+      .groupBy(courses.id)
       .orderBy(desc(courses.createdAt));
 
     const result = await Promise.all(
@@ -170,6 +175,7 @@ export async function GET(request: Request) {
           description: course.description ?? "",
           thumbnail: course.thumbnail ?? "",
           price: course.price ?? 0,
+          enrollmentCount: course.enrollmentCount ?? 0,
 
           createdAt:
             course.createdAt?.toISOString() ?? "",

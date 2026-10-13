@@ -35,9 +35,10 @@ export default function UserMenu() {
     return null;
   }
 
-  const initials = user.name
+  const initials = `${user.firstName} ${user.lastName}`
     .split(" ")
-    .map((n) => n[0])
+    .filter(Boolean)
+    .map((n: string) => n[0])
     .join("")
     .toUpperCase()
     .slice(0, 2);
@@ -75,7 +76,7 @@ export default function UserMenu() {
         >
           <div className="px-3 py-2 border-b border-slate-100">
             <p className="text-sm font-semibold text-slate-900 truncate">
-              {user.name}
+              {`${user.firstName} ${user.lastName}`.trim()}
             </p>
             <p className="text-xs text-slate-500 truncate">
               {user.email}

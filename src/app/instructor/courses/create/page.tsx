@@ -229,26 +229,24 @@ function CreateCoursePageContent() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-7xl px-6 py-8">
+      <div className="w-full px-6 py-8 lg:px-10">
         {/* PAGE HEADER */}
 
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Create Course</h1>
 
             <p className="mt-2 text-slate-500">Build your course step by step.</p>
           </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              resetCourse();
-              router.push("/instructor/courses/create");
-            }}
-            className="ml-4 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-          >
-            + New Course
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              Back to Dashboard
+            </button>
+          </div>
         </div>
 
         {/* AUTO-SAVE STATUS */}
